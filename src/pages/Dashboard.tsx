@@ -7,6 +7,7 @@ import { useToast } from "../components/ToastContainer";
 import "../scss/dashboard.scss";
 import logo from "../images/LOGO UPDATED (7).png";
 
+
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
