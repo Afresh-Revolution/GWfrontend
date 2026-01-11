@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { paymentAPI } from "../services/api";
 import { useToast } from "./ToastContainer";
 import "../scss/payment-form.scss";
@@ -33,7 +33,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSuccess, onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [requiresPin, setRequiresPin] = useState(false);
   const [requiresOtp, setRequiresOtp] = useState(false);
-  const [paymentReference, setPaymentReference] = useState("");
   const { showError, showSuccess } = useToast();
 
   // Format card number with spaces
@@ -134,11 +133,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSuccess, onClose }) => {
           }, 1500);
         } else if (response.status === "send_pin") {
           setRequiresPin(true);
-          setPaymentReference(response.reference);
           showError("Please enter your card PIN");
         } else if (response.status === "send_otp") {
           setRequiresOtp(true);
-          setPaymentReference(response.reference);
           showError("Please enter the OTP sent to your phone/email");
         } else {
           showError(response.error || "Payment failed. Please try again.");
