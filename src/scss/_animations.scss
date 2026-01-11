@@ -1,0 +1,31 @@
+// Animation utilities
+
+@use "./variables" as *;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn $transition-slow ease-in;
+}
+
+.slide-in {
+  animation: slideIn $transition-slow ease-out;
+}

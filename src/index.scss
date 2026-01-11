@@ -1,0 +1,13 @@
+// Main stylesheet - imports all partials in order
+@use "./scss/variables" as *;
+@use "./scss/mixins" as *;
+@use "./scss/base";
+@use "./scss/animations";
+@use "./scss/utilities";
+
+// Component stylesheets
+@import "./scss/auth.scss";
+@import "./scss/dashboard.scss";
+@import "./scss/payment-form.scss";
+@import "./scss/protected-route.scss";
+@import "./scss/toast.scss";

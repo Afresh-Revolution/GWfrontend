@@ -1,0 +1,221 @@
+// SCSS for Input Components
+@use "./variables" as *;
+@use "./mixins" as *;
+
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+.input-field {
+  @include input-base;
+  width: 100%;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: $font-weight-medium;
+  color: $gray-700;
+  margin-bottom: $spacing-xs;
+  line-height: 1.4;
+
+  &.required::after {
+    content: " *";
+    color: $red-600;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .input-icon {
+    position: absolute;
+    right: $spacing-md;
+    color: $gray-400;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+  }
+
+  .input-field {
+    padding-right: 2.75rem;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  right: $spacing-md;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: $gray-400;
+  cursor: pointer;
+  padding: $spacing-xs;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color $transition-base;
+  z-index: 1;
+
+  &:hover {
+    color: $gray-600;
+  }
+
+  &:focus {
+    outline: 2px solid $primary-500;
+    outline-offset: 2px;
+    border-radius: $border-radius-sm;
+  }
+
+  svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+// Error state
+.input-error {
+  .input-field {
+    border-color: $red-600;
+
+    &:focus {
+      border-color: $red-600;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+  }
+
+  .input-icon {
+    color: $red-600;
+  }
+}
+
+// Success state
+.input-success {
+  .input-field {
+    border-color: $green-600;
+
+    &:focus {
+      border-color: $green-600;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    }
+  }
+}
+
+// Helper text
+.input-helper {
+  font-size: 0.8125rem;
+  color: $gray-500;
+  margin-top: $spacing-xs;
+  line-height: 1.4;
+}
+
+// Error message
+.error-message {
+  font-size: 0.8125rem;
+  color: $red-600;
+  margin-top: $spacing-xs;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  line-height: 1.4;
+
+  &::before {
+    content: "⚠";
+    font-size: 0.875rem;
+  }
+}
+
+// Custom file input styling
+.file-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  width: 100%;
+}
+
+.file-input-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: $font-weight-medium;
+  color: $gray-700;
+  margin-bottom: $spacing-xs;
+  line-height: 1.4;
+}
+
+.file-input-field {
+  @include input-base;
+  padding: 0.75rem;
+  cursor: pointer;
+
+  &::file-selector-button {
+    margin-right: $spacing-md;
+    padding: 0.5rem $spacing-md;
+    border-radius: $border-radius-md;
+    border: 1px solid $gray-300;
+    font-size: 0.875rem;
+    font-weight: $font-weight-medium;
+    background-color: $primary-50;
+    color: $primary-700;
+    cursor: pointer;
+    transition: all $transition-base;
+    font-family: inherit;
+
+    &:hover {
+      background-color: $primary-100;
+      border-color: $primary-300;
+    }
+
+    &:active {
+      background-color: $primary-200;
+    }
+  }
+
+  &:hover:not(:disabled) {
+    background-color: $gray-50;
+  }
+
+  &:focus {
+    background-color: white;
+  }
+}
+
+.file-info-display {
+  font-size: 0.875rem;
+  color: $gray-600;
+  padding: $spacing-sm;
+  background-color: $gray-50;
+  border-radius: $border-radius-md;
+  border: 1px solid $gray-200;
+}
+
+// Custom select styling
+.select-wrapper {
+  position: relative;
+  width: 100%;
+
+  select {
+    @include input-base;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right $spacing-sm center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+
+    &:focus {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230ea5e9' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    }
+  }
+}
