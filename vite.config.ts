@@ -7,6 +7,11 @@ export default defineConfig({
   server: {
     host: true, // Allow access from network
     port: 3000,
+    allowedHosts: [
+      "gwfrontend.onrender.com",
+      ".onrender.com", // Allow all Render subdomains
+      "localhost",
+    ],
     proxy: {
       "/api": {
         target: "https://gwbackend.onrender.com",
