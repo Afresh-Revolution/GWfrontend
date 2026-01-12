@@ -6,8 +6,8 @@
 @use "./scss/utilities";
 
 // Component stylesheets
-@import "./scss/auth.scss";
-@import "./scss/dashboard.scss";
-@import "./scss/payment-form.scss";
-@import "./scss/protected-route.scss";
-@import "./scss/toast.scss";
+@forward "./scss/auth.scss";
+@forward "./scss/dashboard.scss";
+@forward "./scss/payment-form.scss";
+@forward "./scss/protected-route.scss";
+@forward "./scss/toast.scss";
