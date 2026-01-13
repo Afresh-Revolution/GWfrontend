@@ -32,8 +32,10 @@ const AdminLogin = () => {
 
     console.log('Admin login attempt:', {
       username: trimmedUsername,
+      usernameLength: trimmedUsername.length,
       hasPassword: !!trimmedPassword,
-      passwordLength: trimmedPassword.length
+      passwordLength: trimmedPassword.length,
+      apiBaseURL: import.meta.env.VITE_API_URL || 'https://gwbackend.onrender.com/api'
     });
 
     if (!trimmedUsername || !trimmedPassword) {
@@ -55,27 +57,45 @@ const AdminLogin = () => {
         localStorage.setItem("admin", JSON.stringify(response.admin));
         navigate("/admin/panel", { replace: true });
       } else {
+        console.error("Invalid response structure:", response);
         showError("Invalid response from server. Please try again.");
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Admin login error:", err);
+      console.error("Error details:", {
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status,
+        statusText: err?.response?.statusText,
+        config: {
+          url: err?.config?.url,
+          method: err?.config?.method,
+          baseURL: err?.config?.baseURL,
+        }
+      });
+
       let errorMessage = "Failed to log in. Please try again.";
 
-      if (err && typeof err === "object") {
-        if ("response" in err) {
-          const axiosError = err as {
-            response?: { data?: { error?: string }; status?: number };
-          };
-          errorMessage = axiosError.response?.data?.error || errorMessage;
-
-          if (axiosError.response?.status === 401) {
-            errorMessage = "Invalid username or password";
-          } else if (axiosError.response?.status === 500) {
-            errorMessage = "Server error. Please try again later.";
-          }
-        } else if ("message" in err) {
-          errorMessage = (err as { message: string }).message;
+      if (err?.response) {
+        // Server responded with an error
+        const status = err.response.status;
+        const serverError = err.response.data?.error || err.response.data?.message;
+        
+        if (status === 401) {
+          errorMessage = serverError || "Invalid username or password. Please check your credentials.";
+        } else if (status === 400) {
+          errorMessage = serverError || "Invalid request. Please check your input.";
+        } else if (status === 500) {
+          errorMessage = serverError || "Server error. Please try again later.";
+        } else if (serverError) {
+          errorMessage = serverError;
         }
+      } else if (err?.request) {
+        // Request was made but no response received
+        errorMessage = "No response from server. Please check your connection and try again.";
+      } else if (err?.message) {
+        // Error setting up the request
+        errorMessage = err.message;
       }
 
       showError(errorMessage);
