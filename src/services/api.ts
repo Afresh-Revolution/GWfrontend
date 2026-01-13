@@ -34,19 +34,24 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ error: string }>) => {
     if (error.response?.status === 401) {
-      // Check if this is an admin route
-      const isAdminRoute = error.config?.url?.startsWith("/admin");
+      // Don't redirect on login routes - let the login component handle errors
+      const isLoginRoute = error.config?.url?.includes("/login");
+      
+      if (!isLoginRoute) {
+        // Check if this is an admin route
+        const isAdminRoute = error.config?.url?.startsWith("/admin");
 
-      if (isAdminRoute) {
-        // Clear admin storage and redirect to admin login
-        localStorage.removeItem("adminToken");
-        localStorage.removeItem("admin");
-        window.location.href = "/admin/login";
-      } else {
-        // Clear user storage and redirect to user login
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/login";
+        if (isAdminRoute) {
+          // Clear admin storage and redirect to admin login
+          localStorage.removeItem("adminToken");
+          localStorage.removeItem("admin");
+          window.location.href = "/admin/login";
+        } else {
+          // Clear user storage and redirect to user login
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

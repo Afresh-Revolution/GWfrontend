@@ -80,9 +80,23 @@ const AdminLogin = () => {
         // Server responded with an error
         const status = err.response.status;
         const serverError = err.response.data?.error || err.response.data?.message;
+        const debugInfo = err.response.data?.debug;
         
         if (status === 401) {
           errorMessage = serverError || "Invalid username or password. Please check your credentials.";
+          
+          // Add helpful hint if available
+          const hint = err.response.data?.hint;
+          if (hint) {
+            console.log('Backend hint:', hint);
+            errorMessage = `${errorMessage}\n\n${hint}`;
+          }
+          
+          // Add helpful debug info if available
+          if (debugInfo && debugInfo.availableAdmins) {
+            console.log('Available admin users:', debugInfo.availableAdmins);
+            errorMessage += ` Available usernames: ${debugInfo.availableAdmins.map((a: any) => a.username).join(', ')}`;
+          }
         } else if (status === 400) {
           errorMessage = serverError || "Invalid request. Please check your input.";
         } else if (status === 500) {
