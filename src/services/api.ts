@@ -12,14 +12,19 @@ const api = axios.create({
 
 // Add token to requests if available
 api.interceptors.request.use((config) => {
-  // Check if this is an admin route
-  const isAdminRoute = config.url?.startsWith("/admin");
-  const token = isAdminRoute
-    ? localStorage.getItem("adminToken")
-    : localStorage.getItem("token");
+  // Don't add token for login endpoints
+  const isLoginRoute = config.url?.includes("/login");
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (!isLoginRoute) {
+    // Check if this is an admin route
+    const isAdminRoute = config.url?.startsWith("/admin");
+    const token = isAdminRoute
+      ? localStorage.getItem("adminToken")
+      : localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -151,14 +156,27 @@ export const adminAPI = {
   login: async (username: string, password: string) => {
     console.log("adminAPI.login called with:", {
       username,
+      usernameLength: username.length,
       hasPassword: !!password,
+      passwordLength: password.length,
     });
-    const response = await api.post("/admin/login", {
-      username,
-      password,
-    });
-    console.log("adminAPI.login response:", response.data);
-    return response.data;
+
+    try {
+      const response = await api.post("/admin/login", {
+        username: username.trim(),
+        password: password,
+      });
+      console.log("adminAPI.login response:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("adminAPI.login error details:", {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+      });
+      throw error;
+    }
   },
 
   getRound: async (roundNumber: number) => {
