@@ -50,10 +50,11 @@ import {
   Eye,
   Copy,
   User as UserIcon,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
-import { adminAPI } from "@/services/api";
+import { adminAPI, categoriesAPI } from "@/services/api";
 import defaultLogo from '../../logo.png';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
@@ -90,6 +91,15 @@ interface Contest {
   prize2: number;
   prize3: number;
   is_active: boolean;
+  category_id?: string;
+  category_name?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
 }
 
 interface SiteInfo {
@@ -127,6 +137,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [contests, setContests] = useState<Contest[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedContestId, setSelectedContestId] = useState<string | null>(null);
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [isContestantsLoading, setIsContestantsLoading] = useState(false);
@@ -140,6 +151,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal/Form states
@@ -150,8 +162,13 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     entry_fee: 0,
     prize1: 0,
     max_contestants: 0,
-    is_active: true
+    is_active: true,
+    category_id: ""
   });
+
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryFormData, setCategoryFormData] = useState({ name: "", description: "" });
 
   const [selectedUserDetails, setSelectedUserDetails] = useState<any>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
@@ -167,15 +184,17 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const fetchInitialData = async () => {
     setIsLoading(true);
     try {
-      const [subData, userData, contestData, infoData] = await Promise.all([
+      const [subData, userData, contestData, infoData, categoriesData] = await Promise.all([
         adminAPI.getAllSubmissions().catch(() => []),
         adminAPI.getAllUsers().catch(() => []),
         adminAPI.getContests().catch(() => []),
-        adminAPI.getSiteInfo().catch(() => null)
+        adminAPI.getSiteInfo().catch(() => null),
+        categoriesAPI.getAll().catch(() => [])
       ]);
       setSubmissions(subData);
       setUsers(userData);
       setContests(contestData);
+      setCategories(categoriesData);
       if (infoData) setSiteInfo(infoData);
     } catch (error) {
       toast.error("Error connecting to admin services");
@@ -286,8 +305,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
-  const hasActiveContest = contests.some(c => c.is_active);
-
   const handleUpdateSiteInfo = async () => {
     try {
       await adminAPI.updateSiteInfo(siteInfo);
@@ -331,12 +348,60 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   const handleUpdateContestStage = async (contestId: string, newStage: string) => {
+    setProcessingId(contestId);
     try {
       await adminAPI.updateContestStage(contestId, newStage);
       toast.success("Contest stage updated");
       setContests(contests.map(c => c.id === contestId ? { ...c, current_stage: newStage } : c));
     } catch (error) {
       toast.error("Failed to update stage");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleDeleteContest = async (contestId: string) => {
+    if (!confirm("Are you sure you want to delete this contest? This action cannot be undone.")) return;
+    setProcessingId(contestId);
+    try {
+      await adminAPI.deleteContest(contestId);
+      toast.success("Contest deleted successfully");
+      setContests(contests.filter(c => c.id !== contestId));
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete contest");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Category handlers
+  const handleCreateOrUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingCategory) {
+        await categoriesAPI.update(editingCategory.id, categoryFormData);
+        toast.success("Category updated successfully");
+      } else {
+        await categoriesAPI.create(categoryFormData);
+        toast.success("Category created successfully");
+      }
+      setShowCategoryForm(false);
+      setEditingCategory(null);
+      setCategoryFormData({ name: "", description: "" });
+      fetchInitialData();
+    } catch (error: any) {
+      toast.error(error.message || "Action failed");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this category?")) return;
+    try {
+      await categoriesAPI.delete(id);
+      toast.success("Category deleted successfully");
+      setCategories(categories.filter(c => c.id !== id));
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete category");
     }
   };
 
@@ -356,6 +421,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'submissions', label: 'Submissions', icon: Video },
     { id: 'users', label: 'Users', icon: UsersIcon },
     { id: 'contests', label: 'Contests', icon: Trophy },
+    { id: 'categories', label: 'Categories', icon: LayoutDashboard },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -534,22 +600,106 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <div className="grid grid-cols-1 gap-2 text-[10px] uppercase font-bold text-slate-400 text-center">
                         <div className="p-2 bg-slate-50 rounded">Prize: ₦{contest.prize1?.toLocaleString() || "0"}</div>
                       </div>
-                      <Button variant="ghost" size="sm" className="w-full text-primary hover:bg-primary/5 h-8" onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingContest(contest);
-                        setContestFormData({
-                          name: contest.name,
-                          entry_fee: contest.entry_fee,
-                          prize1: contest.prize1,
-                          max_contestants: (contest as any).max_contestants || 0,
-                          is_active: contest.is_active
-                        });
-                        setShowContestForm(true);
-                      }}>Edit Details</Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-primary hover:bg-primary/5 h-8"
+                        disabled={processingId === contest.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingContest(contest);
+                          setContestFormData({
+                            name: contest.name,
+                            entry_fee: contest.entry_fee,
+                            prize1: contest.prize1,
+                            max_contestants: (contest as any).max_contestants || 0,
+                            is_active: contest.is_active,
+                            category_id: contest.category_id || ""
+                          });
+                          setShowContestForm(true);
+                        }}
+                      >
+                        {processingId === contest.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Edit Details"}
+                      </Button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteContest(contest.id);
+                        }}
+                        disabled={processingId === contest.id}
+                        className="absolute bottom-2 right-2 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
+                        title="Delete contest"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </CardContent>
                   </Card>
                 ))}
               </div>
+            </div>
+          ) : activeTab === "categories" ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-800">Manage Categories</h3>
+                <Button onClick={() => setShowCategoryForm(true)} className="gap-2">
+                  <Plus className="w-4 h-4" /> Add Category
+                </Button>
+              </div>
+              <Card className="border-none shadow-sm">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-slate-50">
+                      <TableRow>
+                        <TableHead>Category Name</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {categories.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-12 text-slate-400">
+                            No categories yet. Create one to get started.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        categories.map(category => (
+                          <TableRow key={category.id}>
+                            <TableCell className="font-semibold text-slate-900">{category.name}</TableCell>
+                            <TableCell className="text-slate-500 text-sm">{category.description || "—"}</TableCell>
+                            <TableCell className="text-slate-400 text-sm">{new Date(category.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingCategory(category);
+                                    setCategoryFormData({ name: category.name, description: category.description || "" });
+                                    setShowCategoryForm(true);
+                                  }}
+                                  className="text-primary hover:text-primary/80"
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteCategory(category.id)}
+                                  className="text-red-400 hover:text-red-600"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             </div>
           ) : (
             /* Settings View - Same as before */
@@ -627,10 +777,24 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       onChange={e => setContestFormData({ ...contestFormData, max_contestants: parseInt(e.target.value) })}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select
+                      value={contestFormData.category_id}
+                      onValueChange={(val) => setContestFormData({ ...contestFormData, category_id: val })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="ghost" onClick={() => { setShowContestForm(false); setEditingContest(null); }}>Cancel</Button>
-                    <Button type="submit" disabled={!editingContest && hasActiveContest}>
-                      {editingContest ? 'Update' : (hasActiveContest ? 'Active Contest Exists' : 'Create')}
+                    <Button type="submit">
+                      {editingContest ? 'Update' : 'Create'}
                     </Button>
                   </div>
                 </form>
@@ -639,6 +803,42 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
         )
       }
+
+      {/* Category Form Modal */}
+      {showCategoryForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-lg">
+            <CardHeader>
+              <CardTitle>{editingCategory ? 'Edit Category' : 'Create Category'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreateOrUpdateCategory} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Category Name</Label>
+                  <Input
+                    value={categoryFormData.name}
+                    onChange={e => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                    required
+                    placeholder="e.g., Music, Dance, Comedy"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description (Optional)</Label>
+                  <Input
+                    value={categoryFormData.description}
+                    onChange={e => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                    placeholder="Brief description of this category"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="ghost" onClick={() => { setShowCategoryForm(false); setEditingCategory(null); }}>Cancel</Button>
+                  <Button type="submit">{editingCategory ? 'Update' : 'Create'}</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <UserDetailsModal
         open={showUserDetails}
@@ -1030,6 +1230,45 @@ function UserDetailsModal({ open, onClose, data, loading }: { open: boolean, onC
                   <div>
                     <p className="text-xs text-slate-500">Account Holder Name</p>
                     <p className="font-bold">{data.user.account_name || 'Not Provided'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Media & Contact Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Social Media & Contact</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+                  <div>
+                    <p className="text-xs text-slate-500">Facebook</p>
+                    <p className="font-medium text-slate-900">{data.user.facebook || 'Not Provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Instagram</p>
+                    <p className="font-medium text-slate-900">{data.user.instagram || 'Not Provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">TikTok</p>
+                    <p className="font-medium text-slate-900">{data.user.tiktok || 'Not Provided'}</p>
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+                  <div>
+                    <p className="text-xs text-slate-500">X (Twitter)</p>
+                    <p className="font-medium text-slate-900">{data.user.twitter || 'Not Provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Phone Number</p>
+                    <p className="font-medium text-slate-900">{data.user.phone_number || 'Not Provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Location</p>
+                    <p className="font-medium text-slate-900">
+                      {data.user.city && data.user.state
+                        ? `${data.user.city}, ${data.user.state}`
+                        : data.user.city || data.user.state || 'Not Provided'}
+                    </p>
                   </div>
                 </div>
               </div>

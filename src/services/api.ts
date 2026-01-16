@@ -132,6 +132,10 @@ export const adminAPI = {
     const response = await api.put(`/admin/contests/${id}`, data);
     return response.data;
   },
+  deleteContest: async (id: string) => {
+    const response = await api.delete(`/admin/contests/${id}`);
+    return response.data;
+  },
   deleteSubmission: async (id: string) => {
     const response = await api.delete(`/admin/submissions/${id}`);
     return response.data;
@@ -165,5 +169,25 @@ export const adminAPI = {
     return response.data;
   },
 };
+
+export const categoriesAPI = {
+  getAll: async () => {
+    const response = await api.get('/categories');
+    return response.data;
+  },
+  create: async (data: { name: string; description?: string }) => {
+    const response = await api.post('/categories', data);
+    return response.data;
+  },
+  update: async (id: string, data: { name: string; description?: string }) => {
+    const response = await api.put(`/categories/${id}`, data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/categories/${id}`);
+    return response.data;
+  },
+};
+
 
 export default api;

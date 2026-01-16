@@ -29,6 +29,7 @@ interface Contest {
   name: string;
   current_stage: string;
   entry_fee: string;
+  category_name?: string;
 }
 
 interface UserProfile {
@@ -40,6 +41,13 @@ interface UserProfile {
   account_name: string | null;
   round_status: string;
   is_promoted: boolean;
+  facebook?: string | null;
+  instagram?: string | null;
+  tiktok?: string | null;
+  twitter?: string | null;
+  phone_number?: string | null;
+  state?: string | null;
+  city?: string | null;
 }
 
 interface UserDashboardProps {
@@ -58,6 +66,8 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -108,6 +118,13 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
       return;
     }
 
+    // Show Terms & Conditions modal if not agreed
+    if (!agreedToTerms) {
+      setShowTermsModal(true);
+      return;
+    }
+
+    // Proceed with upload (payment already done when entering contest)
     setUploading(true);
 
     const formData = new FormData();
@@ -118,33 +135,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
       await videosAPI.upload(formData);
       toast.success(`Video uploaded successfully for ${selectedContest.name}!`);
       setVideoFile(null);
-
-      // If promoted OR free contest, apply it immediately. Otherwise show payment modal.
-      const entryFee = parseFloat(selectedContest.entry_fee || "0");
-      if (profile?.is_promoted || entryFee === 0) {
-        try {
-          toast.info(entryFee === 0 ? "Joining free contest..." : "Applying your promotion...");
-          const res = await paymentsAPI.initialize({
-            amount: entryFee,
-            payment_method: "promotion",
-            contestId: selectedContest.id
-          });
-
-          // Even if amount is 0, backend handles is_free check
-          toast.success("Successfully joined the contest!");
-          fetchData();
-          return;
-
-        } catch (err) {
-          console.error("Auto-process failed", err);
-          // If it fails, maybe fall back to manual flow or show error
-          toast.error("Failed to process entry. Please try again.");
-          return;
-        }
-      }
-
       fetchData();
-      setShowPayment(true);
     } catch (error: any) {
       console.error("Upload error", error);
       toast.error(error.message || "Failed to upload video");
@@ -301,12 +292,38 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                           <Card key={contest.id} className="hover:shadow-lg transition-all border-none group">
                             <CardHeader className="pb-2">
                               <CardTitle className="text-lg group-hover:text-primary transition-colors">{contest.name}</CardTitle>
-                              <CardDescription>Entry Stage: Stage 1</CardDescription>
+                              <CardDescription>
+                                {contest.category_name && (
+                                  <span className="text-primary font-semibold">{contest.category_name}</span>
+                                )}
+                                {contest.category_name && " • "}
+                                Entry Stage: Stage 1
+                              </CardDescription>
                             </CardHeader>
                             <CardContent>
                               <div className="flex items-center justify-between mt-2">
                                 <span className="text-2xl font-bold text-primary">₦{parseFloat(contest.entry_fee).toLocaleString()}</span>
-                                <Button onClick={() => setSelectedContest(contest)} className="gap-2">
+                                <Button onClick={() => {
+                                  // Check bank details first
+                                  if (!profile?.bank_name || !profile?.account_number) {
+                                    toast.error("Please add your bank details in settings before entering a contest.");
+                                    setActiveView("settings");
+                                    return;
+                                  }
+
+                                  // Set selected contest
+                                  setSelectedContest(contest);
+
+                                  // If promoted or free, go directly to upload
+                                  const entryFee = parseFloat(contest.entry_fee || "0");
+                                  if (profile?.is_promoted || entryFee === 0) {
+                                    // Free entry or promoted - no payment needed
+                                    return;
+                                  }
+
+                                  // Otherwise show payment modal first
+                                  setShowPayment(true);
+                                }} className="gap-2">
                                   Enter Now <ArrowRight className="w-4 h-4" />
                                 </Button>
                               </div>
@@ -500,6 +517,64 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
         )}
       </main>
 
+      {/* Terms & Conditions Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                Terms & Conditions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <p className="text-sm text-slate-700 leading-relaxed">
+                  By submitting your video, you agree that:
+                </p>
+                <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span>Your video may be <strong>edited by our company</strong> for promotional, marketing, or other purposes.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span>You grant us the right to use, modify, and distribute your content.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span>You confirm that you own the rights to the submitted content.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="ghost"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowTermsModal(false);
+                    setAgreedToTerms(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    setAgreedToTerms(true);
+                    setShowTermsModal(false);
+                    // Trigger upload after agreement
+                    handleSubmitVideo();
+                  }}
+                >
+                  I Agree & Continue
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {selectedContest && (
         <PaymentModal
           open={showPayment}
@@ -519,7 +594,14 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
     bank_name: profile?.bank_name || "",
     account_number: profile?.account_number || "",
     account_name: profile?.account_name || "",
-    full_name: profile?.full_name || ""
+    full_name: profile?.full_name || "",
+    facebook: profile?.facebook || "",
+    instagram: profile?.instagram || "",
+    tiktok: profile?.tiktok || "",
+    twitter: profile?.twitter || "",
+    phone_number: profile?.phone_number || "",
+    state: profile?.state || "",
+    city: profile?.city || ""
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -534,7 +616,14 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
         bank_name: profile.bank_name || "",
         account_number: profile.account_number || "",
         account_name: profile.account_name || "",
-        full_name: profile.full_name || ""
+        full_name: profile.full_name || "",
+        facebook: profile.facebook || "",
+        instagram: profile.instagram || "",
+        tiktok: profile.tiktok || "",
+        twitter: profile.twitter || "",
+        phone_number: profile.phone_number || "",
+        state: profile.state || "",
+        city: profile.city || ""
       });
     }
   }, [profile]);
@@ -629,6 +718,81 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
               </div>
               <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save Bank Details
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Social Media & Contact */}
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" /> Social Media & Contact
+            </CardTitle>
+            <CardDescription>Your social media handles and contact information.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Facebook</Label>
+                  <Input
+                    value={bankData.facebook}
+                    onChange={e => setBankData({ ...bankData, facebook: e.target.value })}
+                    placeholder="@username or profile URL"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Instagram</Label>
+                  <Input
+                    value={bankData.instagram}
+                    onChange={e => setBankData({ ...bankData, instagram: e.target.value })}
+                    placeholder="@username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>TikTok</Label>
+                  <Input
+                    value={bankData.tiktok}
+                    onChange={e => setBankData({ ...bankData, tiktok: e.target.value })}
+                    placeholder="@username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>X (Twitter)</Label>
+                  <Input
+                    value={bankData.twitter}
+                    onChange={e => setBankData({ ...bankData, twitter: e.target.value })}
+                    placeholder="@username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Phone Number</Label>
+                  <Input
+                    value={bankData.phone_number}
+                    onChange={e => setBankData({ ...bankData, phone_number: e.target.value })}
+                    placeholder="e.g. 08012345678"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>State</Label>
+                  <Input
+                    value={bankData.state}
+                    onChange={e => setBankData({ ...bankData, state: e.target.value })}
+                    placeholder="e.g. Lagos"
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>City</Label>
+                  <Input
+                    value={bankData.city}
+                    onChange={e => setBankData({ ...bankData, city: e.target.value })}
+                    placeholder="e.g. Ikeja"
+                  />
+                </div>
+              </div>
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save Social Media Info
               </Button>
             </form>
           </CardContent>
