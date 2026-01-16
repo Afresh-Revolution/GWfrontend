@@ -1,23 +1,19 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite'
+import path from 'path'
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: true, // Allow access from network
-    port: 3000,
-    allowedHosts: [
-      "gwfrontend.onrender.com",
-      ".onrender.com", // Allow all Render subdomains
-      "localhost",
-    ],
-    proxy: {
-      "/api": {
-        target: "https://gwbackend.onrender.com",
-        changeOrigin: true,
-        secure: true,
-      },
+  plugins: [
+    // The React and Tailwind plugins are both required for Make, even if
+    // Tailwind is not being actively used – do not remove them
+    react(),
+    tailwindcss(),
+  ],
+  resolve: {
+    alias: {
+      // Alias @ to the src directory
+      '@': path.resolve(__dirname, './src'),
     },
   },
-});
+})

@@ -1,212 +1,193 @@
-import axios, { AxiosError } from "axios";
+import axios from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://gwbackend.onrender.com/api";
+// Use environment variable or default to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
-// Add token to requests if available
-api.interceptors.request.use((config) => {
-  // Don't add token for login endpoints
-  const isLoginRoute = config.url?.includes("/login");
-
-  if (!isLoginRoute) {
-    // Check if this is an admin route
-    const isAdminRoute = config.url?.startsWith("/admin");
-    const token = isAdminRoute
-      ? localStorage.getItem("adminToken")
-      : localStorage.getItem("token");
-
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
-  }
-  return config;
-});
-
-// Handle response errors globally
-api.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<{ error: string }>) => {
-    if (error.response?.status === 401) {
-      // Don't redirect on login routes - let the login component handle errors
-      const isLoginRoute = error.config?.url?.includes("/login");
-      
-      if (!isLoginRoute) {
-        // Check if this is an admin route
-        const isAdminRoute = error.config?.url?.startsWith("/admin");
-
-        if (isAdminRoute) {
-          // Clear admin storage and redirect to admin login
-          localStorage.removeItem("adminToken");
-          localStorage.removeItem("admin");
-          window.location.href = "/admin/login";
-        } else {
-          // Clear user storage and redirect to user login
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          window.location.href = "/login";
-        }
-      }
-    }
+    return config;
+  },
+  (error) => {
     return Promise.reject(error);
   }
 );
 
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Return a standardized error object
+    const customError = {
+      message: error.response?.data?.error || error.response?.data?.message || error.message || 'An error occurred',
+      status: error.response?.status,
+      data: error.response?.data,
+    };
+    return Promise.reject(customError);
+  }
+);
+
 export const authAPI = {
-  signup: async (
-    fullName: string,
-    email: string,
-    password: string,
-    confirmPassword: string
-  ) => {
-    const response = await api.post("/auth/signup", {
-      full_name: fullName,
-      email,
-      password,
-      confirm_password: confirmPassword,
-    });
+  login: async (credentials: any) => {
+    const response = await api.post('/auth/login', credentials);
     return response.data;
   },
-
-  login: async (email: string, password: string) => {
-    const response = await api.post("/auth/login", {
-      email,
-      password,
-    });
+  signup: async (userData: any) => {
+    const response = await api.post('/auth/signup', userData);
+    return response.data;
+  },
+  getProfile: async () => {
+    const response = await api.get('/auth/profile');
+    return response.data;
+  },
+  updateProfile: async (data: any) => {
+    const response = await api.put('/auth/profile', data);
     return response.data;
   },
 };
 
-export const videoAPI = {
-  getStatus: async () => {
-    const response = await api.get("/videos/status");
-    return response.data;
-  },
-
-  upload: async (file: File) => {
-    const formData = new FormData();
-    formData.append("video", file);
-    const response = await api.post("/videos/upload", formData, {
+export const videosAPI = {
+  upload: async (formData: FormData) => {
+    const response = await api.post('/videos/upload', formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
   },
+  getPublicContests: async () => {
+    const response = await api.get('/videos/contests');
+    return response.data;
+  },
+  getStatus: async () => {
+    const response = await api.get('/videos/status');
+    return response.data;
+  },
+  getDownloadUrl: async () => {
+    const response = await api.get('/videos/download');
+    return response.data;
+  }
 };
 
-export const paymentAPI = {
+export const paymentsAPI = {
   getStatus: async () => {
-    const response = await api.get("/payments/status");
+    const response = await api.get('/payments/status');
     return response.data;
   },
-
-  initialize: async (
-    amount: number,
-    currency: string,
-    paymentMethod: string,
-    bankName?: string,
-    accountNumber?: string,
-    accountName?: string
-  ) => {
-    const response = await api.post("/payments/initialize", {
-      amount,
-      currency,
-      payment_method: paymentMethod,
-      bank_name: bankName,
-      account_number: accountNumber,
-      account_name: accountName,
-    });
+  initialize: async (data: any) => {
+    const response = await api.post('/payments/initialize', data);
     return response.data;
   },
-
   verify: async (reference: string) => {
     const response = await api.get(`/payments/verify/${reference}`);
-    return response.data;
-  },
-
-  charge: async (
-    amount: number,
-    currency: string,
-    paymentMethod: string,
-    authorizationCode?: string,
-    pin?: string,
-    otp?: string,
-    bankName?: string,
-    accountNumber?: string,
-    accountName?: string
-  ) => {
-    const response = await api.post("/payments/charge", {
-      amount,
-      currency,
-      payment_method: paymentMethod,
-      authorization_code: authorizationCode,
-      pin,
-      otp,
-      bank_name: bankName,
-      account_number: accountNumber,
-      account_name: accountName,
-    });
     return response.data;
   },
 };
 
 export const adminAPI = {
-  login: async (username: string, password: string) => {
-    console.log("adminAPI.login called with:", {
-      username,
-      usernameLength: username.length,
-      hasPassword: !!password,
-      passwordLength: password.length,
+  getSiteInfo: async () => {
+    const response = await api.get('/admin/site-info');
+    return response.data;
+  },
+  updateSiteInfo: async (data: any) => {
+    const response = await api.put('/admin/site-info', data);
+    return response.data;
+  },
+  changePassword: async (data: any) => {
+    const response = await api.post('/admin/change-password', data);
+    return response.data;
+  },
+  uploadLogo: async (file: File) => {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const response = await api.post('/admin/upload-logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
-
-    try {
-      const response = await api.post("/admin/login", {
-        username: username.trim(),
-        password: password,
-      });
-      console.log("adminAPI.login response:", response.data);
-      return response.data;
-    } catch (error: any) {
-      console.error("adminAPI.login error details:", {
-        message: error?.message,
-        response: error?.response?.data,
-        status: error?.response?.status,
-        statusText: error?.response?.statusText,
-      });
-      throw error;
-    }
-  },
-
-  getRound: async (roundNumber: number) => {
-    const response = await api.get(`/admin/rounds/${roundNumber}`);
     return response.data;
   },
-
-  acceptContestant: async (roundNumber: number, userId: string) => {
-    const response = await api.post(
-      `/admin/rounds/${roundNumber}/accept/${userId}`
-    );
+  getContests: async () => {
+    const response = await api.get('/admin/contests');
     return response.data;
   },
-
-  getVideo: async (videoId: string) => {
-    const response = await api.get(`/admin/videos/${videoId}`);
+  createContest: async (data: any) => {
+    const response = await api.post('/admin/contests', data);
     return response.data;
   },
-
-  downloadVideo: async (videoId: string) => {
-    const response = await api.get(`/admin/videos/${videoId}/download`, {
-      responseType: "blob",
-    });
+  updateContestStage: async (id: string, stage: string) => {
+    const response = await api.put(`/admin/contests/${id}/stage`, { current_stage: stage });
+    return response.data;
+  },
+  updateContest: async (id: string, data: any) => {
+    const response = await api.put(`/admin/contests/${id}`, data);
+    return response.data;
+  },
+  deleteContest: async (id: string) => {
+    const response = await api.delete(`/admin/contests/${id}`);
+    return response.data;
+  },
+  deleteSubmission: async (id: string) => {
+    const response = await api.delete(`/admin/submissions/${id}`);
+    return response.data;
+  },
+  updateContestantStatus: async (data: { video_id: string; winner_position?: number | null; is_promoted?: boolean }) => {
+    const response = await api.put('/admin/contestants/status', data);
+    return response.data;
+  },
+  bulkUpdateContestantStatus: async (data: { video_ids: string[]; is_promoted: boolean }) => {
+    const response = await api.put('/admin/contestants/bulk-status', data);
+    return response.data;
+  },
+  getContestants: async (id: string) => {
+    const response = await api.get(`/admin/contests/${id}/contestants`);
+    return response.data;
+  },
+  getAllSubmissions: async () => {
+    const response = await api.get('/admin/all-submissions');
+    return response.data;
+  },
+  getAllUsers: async () => {
+    const response = await api.get('/admin/all-users');
+    return response.data;
+  },
+  deleteUser: async (id: string) => {
+    const response = await api.delete(`/admin/users/${id}`);
+    return response.data;
+  },
+  getUserDetails: async (id: string) => {
+    const response = await api.get(`/admin/users/${id}`);
     return response.data;
   },
 };
+
+export const categoriesAPI = {
+  getAll: async () => {
+    const response = await api.get('/categories');
+    return response.data;
+  },
+  create: async (data: { name: string; description?: string }) => {
+    const response = await api.post('/categories', data);
+    return response.data;
+  },
+  update: async (id: string, data: { name: string; description?: string }) => {
+    const response = await api.put(`/categories/${id}`, data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/categories/${id}`);
+    return response.data;
+  },
+};
+
 
 export default api;
