@@ -6,7 +6,7 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import {
   Video, Upload, CreditCard, CheckCircle2, XCircle, LogOut,
-  Trophy, Loader2, ArrowRight, Home, Settings, User, Lock, Banknote, Menu, X
+  Trophy, Loader2, ArrowRight, Home, Settings, User, Lock, Banknote, Menu, X, Eye, EyeOff
 } from "lucide-react";
 import { PaymentModal } from "@/app/components/PaymentModal";
 import { videosAPI, paymentsAPI, authAPI } from "@/services/api";
@@ -604,6 +604,10 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
     city: profile?.city || ""
   });
 
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -810,27 +814,60 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
             <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
               <div className="space-y-2">
                 <Label>Current Password</Label>
-                <Input
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                />
+                <div className="relative">
+                  <Input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>New Password</Label>
-                <Input
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                />
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Confirm New Password</Label>
-                <Input
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                />
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" disabled={loading} variant="secondary">
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Change Password

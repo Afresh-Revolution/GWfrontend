@@ -5,6 +5,9 @@ import { UserDashboard } from "@/app/components/UserDashboard";
 import { AdminDashboard } from "@/app/components/AdminDashboard";
 import { Toaster } from "@/app/components/ui/sonner";
 import { PaymentCallbackPage } from "@/app/pages/PaymentCallbackPage";
+import { TermsPage } from "@/app/pages/TermsPage";
+import { PrivacyPage } from "@/app/pages/PrivacyPage";
+import { ContactPage } from "@/app/pages/ContactPage";
 
 import { LandingPage } from "@/app/components/LandingPage";
 
@@ -22,6 +25,9 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/contact" element={<ContactPage />} />
       <Route
         path="/payment/callback"
         element={<PaymentCallbackPage />}

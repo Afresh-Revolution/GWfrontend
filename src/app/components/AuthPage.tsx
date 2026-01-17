@@ -5,7 +5,7 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
-import { Video, Loader2, ArrowLeft, Music, Star } from "lucide-react";
+import { Video, Loader2, ArrowLeft, Music, Star, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/app/context/AuthProvider";
 import defaultLogo from "../../logo.png";
 
@@ -18,11 +18,14 @@ export function AuthPage() {
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const mode = searchParams.get("mode");
@@ -113,15 +116,25 @@ export function AuthPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password" className="text-slate-300 text-xs font-bold uppercase tracking-wider">Password</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      className="bg-slate-950 border-white/10 text-white h-12 rounded-xl focus:ring-primary focus:border-primary transition-all"
-                      placeholder="••••••••"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showLoginPassword ? "text" : "password"}
+                        className="bg-slate-950 border-white/10 text-white h-12 rounded-xl focus:ring-primary focus:border-primary transition-all pr-10"
+                        placeholder="••••••••"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        {showLoginPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 mt-2" disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Access Dashboard"}
@@ -168,27 +181,47 @@ export function AuthPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="signup-password" className="text-slate-300 text-xs font-bold uppercase tracking-wider">Password</Label>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        className="bg-slate-950 border-white/10 text-white h-11 rounded-xl focus:ring-primary focus:border-primary"
-                        placeholder="••••••••"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          id="signup-password"
+                          type={showSignupPassword ? "text" : "password"}
+                          className="bg-slate-950 border-white/10 text-white h-11 rounded-xl focus:ring-primary focus:border-primary pr-10"
+                          placeholder="••••••••"
+                          value={signupPassword}
+                          onChange={(e) => setSignupPassword(e.target.value)}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPassword(!showSignupPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none"
+                          tabIndex={-1}
+                        >
+                          {showSignupPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-confirm-password" className="text-slate-300 text-xs font-bold uppercase tracking-wider">Confirm</Label>
-                      <Input
-                        id="signup-confirm-password"
-                        type="password"
-                        className="bg-slate-950 border-white/10 text-white h-11 rounded-xl focus:ring-primary focus:border-primary"
-                        placeholder="••••••••"
-                        value={signupConfirmPassword}
-                        onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          id="signup-confirm-password"
+                          type={showConfirmPassword ? "text" : "password"}
+                          className="bg-slate-950 border-white/10 text-white h-11 rounded-xl focus:ring-primary focus:border-primary pr-10"
+                          placeholder="••••••••"
+                          value={signupConfirmPassword}
+                          onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none"
+                          tabIndex={-1}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 mt-2" disabled={isLoading}>

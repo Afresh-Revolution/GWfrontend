@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use environment variable or default to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Use environment variable or default to production backend
+const API_URL = import.meta.env.VITE_API_URL || 'https://gwbackend.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -96,6 +96,10 @@ export const paymentsAPI = {
 };
 
 export const adminAPI = {
+  login: async (credentials: { email: string; password: string }) => {
+    const response = await api.post('/admin/login', credentials);
+    return response.data;
+  },
   getSiteInfo: async () => {
     const response = await api.get('/admin/site-info');
     return response.data;

@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
 import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+// @ts-expect-error: The @tailwindcss/vite module may not provide types, but plugin is required.
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
@@ -14,6 +15,23 @@ export default defineConfig({
     alias: {
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    host: true, // Allow access from network
+    port: 3000,
+    allowedHosts: [
+      "gwfrontend.onrender.com",
+      ".onrender.com", // Allow all Render subdomains
+      "localhost",
+    ],
+    proxy: {
+      "/api": {
+        target: process.env.VITE_API_URL || "https://gwbackend.onrender.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, "/api"),
+      },
     },
   },
 })
