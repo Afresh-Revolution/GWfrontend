@@ -24,6 +24,7 @@ export default defineConfig({
       "gwfrontend.onrender.com",
       ".onrender.com", // Allow all Render subdomains
       "localhost",
+      "genius.ng",
     ],
     proxy: {
       "/api": {
