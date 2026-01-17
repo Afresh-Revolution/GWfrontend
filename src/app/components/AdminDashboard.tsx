@@ -48,6 +48,7 @@ import {
   Menu,
   ChevronRight,
   Eye,
+  EyeOff,
   Copy,
   User as UserIcon,
   Loader2,
@@ -1079,6 +1080,10 @@ function ContestantsListView({ contestants, loading, contestName, onUpdateStatus
 }
 
 function SettingsView({ siteInfo, setSiteInfo, handleUpdateSiteInfo, handleLogoUpload, isUploadingLogo, fileInputRef, getLogoSrc, passwords, setPasswords, handleChangePassword }: any) {
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card className="border-none shadow-sm">
@@ -1131,15 +1136,63 @@ function SettingsView({ siteInfo, setSiteInfo, handleUpdateSiteInfo, handleLogoU
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm">Current Password</Label>
-              <Input type="password" value={passwords.current} onChange={e => setPasswords({ ...passwords, current: e.target.value })} required />
+              <div className="relative">
+                <Input 
+                  type={showCurrentPassword ? "text" : "password"} 
+                  value={passwords.current} 
+                  onChange={e => setPasswords({ ...passwords, current: e.target.value })} 
+                  className="pr-10"
+                  required 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="text-sm text-red-500">New Password</Label>
-              <Input type="password" value={passwords.new} onChange={e => setPasswords({ ...passwords, new: e.target.value })} required />
+              <div className="relative">
+                <Input 
+                  type={showNewPassword ? "text" : "password"} 
+                  value={passwords.new} 
+                  onChange={e => setPasswords({ ...passwords, new: e.target.value })} 
+                  className="pr-10"
+                  required 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="text-sm">Confirm Password</Label>
-              <Input type="password" value={passwords.confirm} onChange={e => setPasswords({ ...passwords, confirm: e.target.value })} required />
+              <div className="relative">
+                <Input 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  value={passwords.confirm} 
+                  onChange={e => setPasswords({ ...passwords, confirm: e.target.value })} 
+                  className="pr-10"
+                  required 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" variant="secondary" className="w-full gap-2 h-10 mt-2">
               <ShieldCheck className="w-4 h-4" /> Update Credentials
