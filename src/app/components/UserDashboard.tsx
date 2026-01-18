@@ -281,7 +281,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                   <section className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold text-white">Available Contests</h2>
-                      <span className="text-sm text-slate-500">{filteredAvailableContests.length} Open</span>
+                      <span className="text-sm text-slate-400">{filteredAvailableContests.length} Open</span>
                     </div>
                     {!isEligibleForNewContest ? (
                       <Card className="border-amber-500/30 bg-amber-500/10 py-10 text-center backdrop-blur-sm">
@@ -339,7 +339,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
 
                                   // Otherwise show payment modal first
                                   setShowPayment(true);
-                                }} className="gap-2">
+                                }} className="gap-2 bg-primary hover:bg-primary/90 text-white">
                                   Enter Now <ArrowRight className="w-4 h-4" />
                                 </Button>
                               </div>
@@ -398,7 +398,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                         {videoFile && (
                           <Button
                             onClick={handleSubmitVideo}
-                            className="w-full text-lg h-12"
+                            className="w-full text-lg h-12 bg-primary hover:bg-primary/90 text-white"
                             disabled={uploading || !profile?.bank_name || !profile?.account_number}
                           >
                             {uploading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : (profile?.is_promoted || parseFloat(selectedContest?.entry_fee || "0") === 0 ? <Trophy className="w-5 h-5 mr-2" /> : <Upload className="w-5 h-5 mr-2" />)}
@@ -566,7 +566,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
               <div className="flex gap-2 pt-2">
                 <Button
                   variant="ghost"
-                  className="flex-1"
+                  className="flex-1 text-slate-300 hover:text-white hover:bg-white/10"
                   onClick={() => {
                     setShowTermsModal(false);
                     setAgreedToTerms(false);
@@ -575,7 +575,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white"
                   onClick={() => {
                     setAgreedToTerms(true);
                     setShowTermsModal(false);
@@ -707,40 +707,44 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Full Name</Label>
+                  <Label className="text-white">Full Name</Label>
                   <Input
                     value={bankData.full_name}
                     onChange={e => setBankData({ ...bankData, full_name: e.target.value })}
                     placeholder="Enter your full name"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Bank Name</Label>
+                  <Label className="text-white">Bank Name</Label>
                   <Input
                     value={bankData.bank_name}
                     onChange={e => setBankData({ ...bankData, bank_name: e.target.value })}
                     placeholder="e.g. GTBank, Zenith Bank"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Account Number</Label>
+                  <Label className="text-white">Account Number</Label>
                   <Input
                     value={bankData.account_number}
                     onChange={e => setBankData({ ...bankData, account_number: e.target.value })}
                     placeholder="10-digit number"
                     maxLength={10}
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Account Name</Label>
+                  <Label className="text-white">Account Name</Label>
                   <Input
                     value={bankData.account_name}
                     onChange={e => setBankData({ ...bankData, account_name: e.target.value })}
                     placeholder="Name on your account"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white">
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save Bank Details
               </Button>
             </form>
@@ -759,63 +763,70 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Facebook</Label>
+                  <Label className="text-white">Facebook</Label>
                   <Input
                     value={bankData.facebook}
                     onChange={e => setBankData({ ...bankData, facebook: e.target.value })}
                     placeholder="@username or profile URL"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Instagram</Label>
+                  <Label className="text-white">Instagram</Label>
                   <Input
                     value={bankData.instagram}
                     onChange={e => setBankData({ ...bankData, instagram: e.target.value })}
                     placeholder="@username"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>TikTok</Label>
+                  <Label className="text-white">TikTok</Label>
                   <Input
                     value={bankData.tiktok}
                     onChange={e => setBankData({ ...bankData, tiktok: e.target.value })}
                     placeholder="@username"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>X (Twitter)</Label>
+                  <Label className="text-white">X (Twitter)</Label>
                   <Input
                     value={bankData.twitter}
                     onChange={e => setBankData({ ...bankData, twitter: e.target.value })}
                     placeholder="@username"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Phone Number</Label>
+                  <Label className="text-white">Phone Number</Label>
                   <Input
                     value={bankData.phone_number}
                     onChange={e => setBankData({ ...bankData, phone_number: e.target.value })}
                     placeholder="e.g. 08012345678"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>State</Label>
+                  <Label className="text-white">State</Label>
                   <Input
                     value={bankData.state}
                     onChange={e => setBankData({ ...bankData, state: e.target.value })}
                     placeholder="e.g. Lagos"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
-                  <Label>City</Label>
+                  <Label className="text-white">City</Label>
                   <Input
                     value={bankData.city}
                     onChange={e => setBankData({ ...bankData, city: e.target.value })}
                     placeholder="e.g. Ikeja"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white">
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Save Social Media Info
               </Button>
             </form>
@@ -833,18 +844,18 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
           <CardContent>
             <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
               <div className="space-y-2">
-                <Label>Current Password</Label>
+                <Label className="text-white">Current Password</Label>
                 <div className="relative">
                   <Input
                     type={showCurrentPassword ? "text" : "password"}
                     value={passwordData.currentPassword}
                     onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    className="pr-10"
+                    className="pr-10 bg-slate-800/50 border-white/10 text-white"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors focus:outline-none"
                     tabIndex={-1}
                   >
                     {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -852,18 +863,18 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>New Password</Label>
+                <Label className="text-white">New Password</Label>
                 <div className="relative">
                   <Input
                     type={showNewPassword ? "text" : "password"}
                     value={passwordData.newPassword}
                     onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className="pr-10"
+                    className="pr-10 bg-slate-800/50 border-white/10 text-white"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors focus:outline-none"
                     tabIndex={-1}
                   >
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -871,25 +882,25 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Confirm New Password</Label>
+                <Label className="text-white">Confirm New Password</Label>
                 <div className="relative">
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
                     value={passwordData.confirmPassword}
                     onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    className="pr-10"
+                    className="pr-10 bg-slate-800/50 border-white/10 text-white"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors focus:outline-none"
                     tabIndex={-1}
                   >
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-              <Button type="submit" disabled={loading} variant="secondary">
+              <Button type="submit" disabled={loading} variant="secondary" className="bg-secondary hover:bg-secondary/90 text-white">
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Change Password
               </Button>
             </form>
