@@ -167,6 +167,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     is_active: true,
     category_id: ""
   });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [contestToDelete, setContestToDelete] = useState<Contest | null>(null);
 
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -375,18 +377,26 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
-  const handleDeleteContest = async (contestId: string) => {
-    if (!confirm("Are you sure you want to delete this contest? This action cannot be undone.")) return;
+  const handleDeleteContest = async () => {
+    if (!contestToDelete) return;
+    const contestId = contestToDelete.id;
     setProcessingId(contestId);
+    setShowDeleteDialog(false);
     try {
       await adminAPI.deleteContest(contestId);
       toast.success("Contest deleted successfully");
       setContests(contests.filter(c => c.id !== contestId));
+      setContestToDelete(null);
     } catch (error: any) {
       toast.error(error.message || "Failed to delete contest");
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const openDeleteDialog = (contest: Contest) => {
+    setContestToDelete(contest);
+    setShowDeleteDialog(true);
   };
 
   // Category handlers
@@ -655,7 +665,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteContest(contest.id);
+                          openDeleteDialog(contest);
                         }}
                         disabled={processingId === contest.id}
                         className="absolute bottom-2 right-2 p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors disabled:opacity-50"
@@ -876,6 +886,54 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </Card>
         </div>
       )}
+
+      {/* Delete Contest Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-md border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-400" />
+              Delete Contest
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Are you sure you want to delete this contest? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {contestToDelete && (
+            <div className="py-4">
+              <p className="text-white font-semibold">Contest: <span className="text-primary">{contestToDelete.name}</span></p>
+              <p className="text-slate-400 text-sm mt-1">All associated data will be permanently deleted.</p>
+            </div>
+          )}
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setContestToDelete(null);
+              }}
+              disabled={processingId === contestToDelete?.id}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteContest}
+              disabled={processingId === contestToDelete?.id}
+            >
+              {processingId === contestToDelete?.id ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete Contest
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <UserDetailsModal
         open={showUserDetails}
