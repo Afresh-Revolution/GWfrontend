@@ -12,6 +12,7 @@ import { PaymentModal } from "@/app/components/PaymentModal";
 import { videosAPI, paymentsAPI, authAPI } from "@/services/api";
 import { toast } from "sonner";
 import defaultLogo from "../../logo.png";
+import BgImage from "../../bg.jpg";
 
 interface Submission {
   id: string;
@@ -165,7 +166,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -178,12 +179,27 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
   const isEligibleForNewContest = submissions.length === 0 || profile?.is_promoted;
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-slate-950 relative">
+      {/* Background Image */}
+      <div className="fixed inset-0 -z-20 select-none">
+        <div className="absolute inset-0 bg-slate-950/95 z-10" />
+        <img
+          src={BgImage}
+          alt=""
+          className="w-full h-full object-cover opacity-20 blur-2xl scale-110"
+        />
+      </div>
+
+      {/* Animated Background Elements */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 blur-[128px] rounded-full animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 blur-[128px] rounded-full animate-pulse delay-700" />
+      </div>
       {/* Mobile Header */}
-      <header className="lg:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
+      <header className="lg:hidden h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 sticky top-0 z-30">
         <div className="flex items-center gap-2">
           <img src={defaultLogo} alt="GeniusWave" className="w-8 h-8 rounded object-contain" />
-          <span className="font-bold text-slate-900 tracking-tight">GeniusWave</span>
+          <span className="font-bold text-white tracking-tight">GeniusWave</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -200,13 +216,13 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col z-50 transition-transform duration-300
+        fixed inset-y-0 left-0 w-64 bg-slate-900/90 backdrop-blur-md border-r border-white/10 flex flex-col z-50 transition-transform duration-300
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:z-20
       `}>
-        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+        <div className="p-6 border-b border-white/10 flex items-center gap-3">
           <img src={defaultLogo} alt="GeniusWave" className="w-9 h-9 rounded-lg object-contain" />
-          <span className="font-bold text-slate-900">GeniusWave</span>
+          <span className="font-bold text-white">GeniusWave</span>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
@@ -226,17 +242,17 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
           </Button>
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center gap-3 p-3 mb-4 bg-slate-50 rounded-xl">
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase text-xs shrink-0">
+        <div className="p-4 border-t border-white/10">
+          <div className="flex items-center gap-3 p-3 mb-4 bg-white/5 rounded-xl">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold uppercase text-xs shrink-0">
               {profile?.full_name?.charAt(0) || userEmail.charAt(0)}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate">{profile?.full_name || 'User'}</p>
-              <p className="text-[10px] text-slate-500 truncate">{userEmail}</p>
+              <p className="text-xs font-bold text-white truncate">{profile?.full_name || 'User'}</p>
+              <p className="text-[10px] text-slate-400 truncate">{userEmail}</p>
             </div>
           </div>
-          <Button variant="ghost" onClick={onLogout} className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl">
+          <Button variant="ghost" onClick={onLogout} className="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl">
             <LogOut className="w-4 h-4" /> Logout
           </Button>
         </div>
@@ -247,14 +263,14 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
         {activeView === "home" ? (
           <div className="container mx-auto px-6 py-8 max-w-6xl">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-slate-900">User Dashboard</h2>
+              <h2 className="text-2xl font-bold text-white">User Dashboard</h2>
               <div className="flex gap-2">
                 {profile?.is_promoted && (
                   <Badge className="bg-amber-500 text-white animate-pulse border-none px-3 py-1">
                     <Trophy className="w-3 h-3 mr-1" /> Promoted: Next Entry Free!
                   </Badge>
                 )}
-                <Badge variant="outline" className="bg-white px-3 py-1">Overall Status: {profile?.round_status === 'none' ? 'Ready to Start' : profile?.round_status}</Badge>
+                <Badge variant="outline" className="bg-white/10 text-white border-white/20 px-3 py-1">Overall Status: {profile?.round_status === 'none' ? 'Ready to Start' : profile?.round_status}</Badge>
               </div>
             </div>
 
@@ -264,35 +280,35 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                 {!selectedContest ? (
                   <section className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-slate-800">Available Contests</h2>
+                      <h2 className="text-lg font-bold text-white">Available Contests</h2>
                       <span className="text-sm text-slate-500">{filteredAvailableContests.length} Open</span>
                     </div>
                     {!isEligibleForNewContest ? (
-                      <Card className="border-amber-200 bg-amber-50/50 py-10 text-center">
+                      <Card className="border-amber-500/30 bg-amber-500/10 py-10 text-center backdrop-blur-sm">
                         <div className="max-w-md mx-auto px-6">
-                          <Trophy className="w-12 h-12 mx-auto mb-4 text-amber-500 opacity-50" />
-                          <h3 className="text-lg font-bold text-slate-900 mb-2">Promotion Required</h3>
-                          <p className="text-sm text-slate-600 mb-6">
+                          <Trophy className="w-12 h-12 mx-auto mb-4 text-amber-400 opacity-50" />
+                          <h3 className="text-lg font-bold text-white mb-2">Promotion Required</h3>
+                          <p className="text-sm text-slate-300 mb-6">
                             You've completed your current contest entry. To join a new contest, you must be
                             <strong> promoted</strong> by the administrators based on your performance.
                           </p>
-                          <Badge variant="outline" className="bg-white text-slate-500 border-slate-200">
+                          <Badge variant="outline" className="bg-white/10 text-slate-300 border-white/20">
                             Check back later for results
                           </Badge>
                         </div>
                       </Card>
                     ) : filteredAvailableContests.length === 0 ? (
-                      <Card className="border-dashed py-12 text-center text-slate-400">
+                      <Card className="border-dashed border-white/20 bg-slate-900/50 backdrop-blur-sm py-12 text-center text-slate-400">
                         <Trophy className="w-12 h-12 mx-auto mb-3 opacity-20" />
                         <p>No new contests available at the moment.</p>
                       </Card>
                     ) : (
                       <div className="grid gap-4 sm:grid-cols-2">
                         {filteredAvailableContests.map(contest => (
-                          <Card key={contest.id} className="hover:shadow-lg transition-all border-none group">
+                          <Card key={contest.id} className="hover:shadow-lg transition-all border-none bg-slate-900/80 backdrop-blur-sm group">
                             <CardHeader className="pb-2">
-                              <CardTitle className="text-lg group-hover:text-primary transition-colors">{contest.name}</CardTitle>
-                              <CardDescription>
+                              <CardTitle className="text-lg text-white group-hover:text-primary transition-colors">{contest.name}</CardTitle>
+                              <CardDescription className="text-slate-400">
                                 {contest.category_name && (
                                   <span className="text-primary font-semibold">{contest.category_name}</span>
                                 )}
@@ -339,33 +355,33 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                       <Button variant="ghost" size="sm" onClick={() => setSelectedContest(null)} className="text-primary hover:text-primary/80">
                         &larr; Back to Contests
                       </Button>
-                      <h2 className="text-lg font-bold text-slate-800">Submit for {selectedContest.name}</h2>
+                      <h2 className="text-lg font-bold text-white">Submit for {selectedContest.name}</h2>
                     </div>
 
-                    <Card className="border-2 border-dashed border-primary/20 bg-white">
+                    <Card className="border-2 border-dashed border-primary/30 bg-slate-900/80 backdrop-blur-sm">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
+                        <CardTitle className="flex items-center gap-2 text-lg text-white">
                           <Upload className="w-5 h-5 text-primary" />
                           Upload Your Entry
                         </CardTitle>
-                        <CardDescription>Select your talent video (Max 500MB)</CardDescription>
+                        <CardDescription className="text-slate-400">Select your talent video (Max 500MB)</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <label
                           htmlFor="video-upload"
-                          className="block w-full p-12 border-2 border-dashed border-slate-200 rounded-xl text-center cursor-pointer hover:bg-slate-50 transition-colors"
+                          className="block w-full p-12 border-2 border-dashed border-white/20 rounded-xl text-center cursor-pointer hover:bg-white/5 transition-colors"
                           style={{ pointerEvents: uploading ? 'none' : 'auto', opacity: uploading ? 0.5 : 1 }}
                         >
                           {videoFile ? (
                             <div className="space-y-2">
                               <Video className="w-12 h-12 mx-auto text-primary" />
-                              <p className="font-semibold text-slate-900">{videoFile.name}</p>
-                              <p className="text-xs text-slate-500">{(videoFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                              <p className="font-semibold text-white">{videoFile.name}</p>
+                              <p className="text-xs text-slate-400">{(videoFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                             </div>
                           ) : (
                             <div className="space-y-2 text-slate-400">
                               <Upload className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                              <p className="font-semibold text-slate-700">Click to upload video</p>
+                              <p className="font-semibold text-slate-300">Click to upload video</p>
                               <p className="text-sm">MP4, MOV supported</p>
                             </div>
                           )}
@@ -390,7 +406,7 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                           </Button>
                         )}
                         {(!profile?.bank_name || !profile?.account_number) && (
-                          <p className="text-xs text-center text-red-500 font-medium bg-red-50 p-2 rounded">
+                          <p className="text-xs text-center text-red-400 font-medium bg-red-500/10 border border-red-500/20 p-2 rounded">
                             * Please set your bank details in settings before uploading.
                           </p>
                         )}
@@ -401,25 +417,25 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
 
                 {/* My Entries List */}
                 <section className="space-y-4">
-                  <h2 className="text-lg font-bold text-slate-800">My Submissions</h2>
+                  <h2 className="text-lg font-bold text-white">My Submissions</h2>
                   <div className="space-y-3">
                     {submissions.length === 0 ? (
-                      <Card className="py-8 bg-transparent border-slate-200 border-dashed text-center">
+                      <Card className="py-8 bg-slate-900/50 backdrop-blur-sm border-white/20 border-dashed text-center">
                         <p className="text-slate-400">No entries yet.</p>
                       </Card>
                     ) : (
                       submissions.map(sub => (
-                        <Card key={sub.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
+                        <Card key={sub.id} className="overflow-hidden border-none bg-slate-900/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4">
-                            <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
+                            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center shrink-0">
                               <Video className="w-6 h-6 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between mb-1">
-                                <h3 className="font-bold text-slate-900 truncate">{sub.contestName}</h3>
+                                <h3 className="font-bold text-white truncate">{sub.contestName}</h3>
                                 {getStatusBadge(sub.uploadStatus)}
                               </div>
-                              <p className="text-xs text-slate-500 mb-2">{sub.fileName} • {sub.uploadedAt}</p>
+                              <p className="text-xs text-slate-400 mb-2">{sub.fileName} • {sub.uploadedAt}</p>
                               <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => {
                                   if (sub.paymentStatus !== 'completed') {
@@ -488,23 +504,23 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm">
+                <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
                       <Banknote className="w-4 h-4 text-secondary" /> Payout Info
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {!profile?.bank_name ? (
-                      <div className="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg flex flex-col gap-2">
+                      <div className="text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 p-3 rounded-lg flex flex-col gap-2">
                         <p className="font-semibold flex items-center gap-1"><XCircle className="w-3 h-3" /> No Bank Details</p>
-                        <p>Provide your bank details to be eligible for winner prizes.</p>
-                        <Button variant="link" size="sm" className="h-auto p-0 text-orange-600 flex justify-start underline" onClick={() => setActiveView("settings")}>Go to Settings &rarr;</Button>
+                        <p className="text-slate-300">Provide your bank details to be eligible for winner prizes.</p>
+                        <Button variant="link" size="sm" className="h-auto p-0 text-orange-400 flex justify-start underline" onClick={() => setActiveView("settings")}>Go to Settings &rarr;</Button>
                       </div>
                     ) : (
                       <div className="text-xs space-y-2 border-l-2 border-green-500 pl-3">
-                        <p className="text-slate-400">Bank: <span className="text-slate-900 font-semibold">{profile.bank_name}</span></p>
-                        <p className="text-slate-400">Acc: <span className="text-slate-900 font-semibold">{profile.account_number}</span></p>
+                        <p className="text-slate-400">Bank: <span className="text-white font-semibold">{profile.bank_name}</span></p>
+                        <p className="text-slate-400">Acc: <span className="text-white font-semibold">{profile.account_number}</span></p>
                       </div>
                     )}
                   </CardContent>
@@ -519,20 +535,20 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
 
       {/* Terms & Conditions Modal */}
       {showTermsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md bg-slate-900/95 backdrop-blur-md border-white/10">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <CheckCircle2 className="w-5 h-5 text-primary" />
                 Terms & Conditions
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-700 leading-relaxed">
+              <div className="bg-white/5 border border-white/10 p-4 rounded-lg">
+                <p className="text-sm text-slate-300 leading-relaxed">
                   By submitting your video, you agree that:
                 </p>
-                <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <ul className="mt-3 space-y-2 text-sm text-slate-400">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     <span>Your video may be <strong>edited by our company</strong> for promotional, marketing, or other purposes.</span>
@@ -578,7 +594,11 @@ export function UserDashboard({ userEmail, onLogout }: UserDashboardProps) {
       {selectedContest && (
         <PaymentModal
           open={showPayment}
-          onClose={() => setShowPayment(false)}
+          onClose={() => {
+            setShowPayment(false);
+            setSelectedContest(null); // Reset to show available contests
+            setActiveView("home"); // Ensure we're on home view
+          }}
           amount={parseFloat(selectedContest.entry_fee)}
           contestId={selectedContest.id}
           onComplete={() => fetchData()}
@@ -670,18 +690,18 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
   return (
     <div className="container mx-auto px-6 py-8 max-w-4xl">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-slate-900">Settings & Profile</h2>
-        <p className="text-slate-500">Manage your identity and payout information.</p>
+        <h2 className="text-2xl font-bold text-white">Settings & Profile</h2>
+        <p className="text-slate-400">Manage your identity and payout information.</p>
       </div>
 
       <div className="grid gap-8">
         {/* Payout Details */}
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2 text-white">
               <Banknote className="w-5 h-5 text-primary" /> Bank Details
             </CardTitle>
-            <CardDescription>We'll use these details to pay out prizes to winners.</CardDescription>
+            <CardDescription className="text-slate-400">We'll use these details to pay out prizes to winners.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -728,12 +748,12 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
         </Card>
 
         {/* Social Media & Contact */}
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2 text-white">
               <User className="w-5 h-5 text-primary" /> Social Media & Contact
             </CardTitle>
-            <CardDescription>Your social media handles and contact information.</CardDescription>
+            <CardDescription className="text-slate-400">Your social media handles and contact information.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -803,12 +823,12 @@ function SettingsView({ profile, fetchData }: { profile: UserProfile | null, fet
         </Card>
 
         {/* Security */}
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2 text-white">
               <Lock className="w-5 h-5 text-red-400" /> Security
             </CardTitle>
-            <CardDescription>Change your account password.</CardDescription>
+            <CardDescription className="text-slate-400">Change your account password.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
