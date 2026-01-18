@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { authAPI } from "@/services/api";
+import { authAPI, adminAPI } from "@/services/api";
 // import { jwtDecode } from "jwt-decode"; // Requires installing jwt-decode. using simple parse for now if preferred, or ensure dependency installed. 
 // Plan said install jwt-decode, so we assume it is/will be available.
 import { jwtDecode } from "jwt-decode";
@@ -37,12 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (decoded.exp * 1000 < Date.now()) {
                     logout();
                 } else {
-                    // Backend token structure: { userId, email, role }
+                    // Backend token structure: 
+                    // Admin: { adminId, username, isAdmin: true }
+                    // User: { userId, email, role }
+                    const isAdmin = decoded.isAdmin === true;
                     setUser({
-                        id: decoded.userId,
-                        email: decoded.email,
-                        role: decoded.role || "user",
-                        full_name: decoded.full_name
+                        id: decoded.userId || decoded.adminId,
+                        email: decoded.email || decoded.username,
+                        role: isAdmin ? "admin" : (decoded.role || "user"),
+                        full_name: decoded.full_name || decoded.username
                     });
                 }
             } catch (error) {
@@ -63,15 +66,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Let's try user login first.
 
             let data;
-            // Heuristic: check if email contains "admin" or trying to hit admin endpoint?
-            // The implementation plan didn't specify separate admin login flow, but AuthPage has a hint.
-            // We will stick to standard user login for now as per AuthPage.tsx logic.
-
-            data = await authAPI.login(credentials);
-
-            localStorage.setItem("token", data.token);
-            setToken(data.token);
-            toast.success("Login successful");
+            
+            // Try admin login first for admin users
+            // If it fails, fall back to regular user login
+            try {
+                data = await adminAPI.login(credentials);
+                // Admin login successful - token has isAdmin: true
+                localStorage.setItem("token", data.token);
+                setToken(data.token);
+                toast.success("Admin login successful");
+                return;
+            } catch (adminError: any) {
+                // If admin login fails (not an admin user), try regular login
+                if (adminError.status === 401 || adminError.status === 404) {
+                    // Not an admin user, try regular login
+                    data = await authAPI.login(credentials);
+                    localStorage.setItem("token", data.token);
+                    setToken(data.token);
+                    toast.success("Login successful");
+                } else {
+                    // Other admin login error, throw it
+                    throw adminError;
+                }
+            }
         } catch (error: any) {
             console.error("Login failed", error);
             toast.error(error.message || "Login failed");

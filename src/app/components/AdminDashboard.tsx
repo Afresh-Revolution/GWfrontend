@@ -57,6 +57,7 @@ import {
 import { toast } from "sonner";
 import { adminAPI, categoriesAPI } from "@/services/api";
 import defaultLogo from '../../logo.png';
+import BgImage from '../../bg.jpg';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
 
@@ -220,19 +221,32 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleCreateOrUpdateContest = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Normalize category_id: convert empty string to null
+      const formData = {
+        ...contestFormData,
+        category_id: contestFormData.category_id || null
+      };
+      
       if (editingContest) {
-        await adminAPI.updateContest(editingContest.id, contestFormData);
+        await adminAPI.updateContest(editingContest.id, formData);
         toast.success("Contest updated successfully");
       } else {
-        await adminAPI.createContest(contestFormData);
+        await adminAPI.createContest(formData);
         toast.success("Contest created successfully");
       }
       setShowContestForm(false);
       setEditingContest(null);
-      setContestFormData({ name: "", entry_fee: 0, prize1: 0, max_contestants: 0, is_active: true });
-      fetchInitialData();
-    } catch (error) {
-      toast.error("Action failed");
+      setContestFormData({ name: "", entry_fee: 0, prize1: 0, max_contestants: 0, is_active: true, category_id: "" });
+      // Refresh contests list to show the newly created contest
+      await fetchInitialData();
+      // Ensure we're on the contests tab to see the new contest
+      if (activeTab !== "contests") {
+        setActiveTab("contests");
+      }
+    } catch (error: any) {
+      console.error("Contest creation/update error:", error);
+      const errorMessage = error?.message || error?.data?.error || "Action failed";
+      toast.error(errorMessage);
     }
   };
 
@@ -427,7 +441,23 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50">
+    <div className="flex min-h-screen bg-slate-950 relative">
+      {/* Background Image */}
+      <div className="fixed inset-0 -z-20 select-none">
+        <div className="absolute inset-0 bg-slate-950/95 z-10" />
+        <img
+          src={BgImage}
+          alt=""
+          className="w-full h-full object-cover opacity-20 blur-2xl scale-110"
+        />
+      </div>
+
+      {/* Animated Background Elements */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 blur-[128px] rounded-full animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 blur-[128px] rounded-full animate-pulse delay-700" />
+      </div>
+
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div
@@ -438,11 +468,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col z-50 transition-transform duration-300
+        fixed inset-y-0 left-0 w-64 bg-slate-900/90 backdrop-blur-md border-r border-white/10 flex flex-col z-50 transition-transform duration-300
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:h-screen lg:z-20
       `}>
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {siteInfo.logo_url ? (
               <img
@@ -461,8 +491,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <Video className="w-5 h-5 text-white" />
             </div>
             <div className="overflow-hidden">
-              <h1 className="font-bold text-sm text-slate-900 truncate">{siteInfo.site_name}</h1>
-              <p className="text-[10px] text-slate-500">Admin Panel</p>
+              <h1 className="font-bold text-sm text-white truncate">{siteInfo.site_name}</h1>
+              <p className="text-[10px] text-slate-400">Admin Panel</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
@@ -481,7 +511,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${activeTab === item.id && !selectedContestId
                 ? 'bg-primary/10 text-primary font-medium'
-                : 'text-slate-600 hover:bg-slate-50'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <div className="flex items-center gap-3">
@@ -493,8 +523,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
-          <Button variant="ghost" onClick={onLogout} className="w-full justify-start text-slate-600 hover:text-red-600 gap-3 px-3">
+        <div className="p-4 border-t border-white/10">
+          <Button variant="ghost" onClick={onLogout} className="w-full justify-start text-slate-300 hover:text-red-400 hover:bg-red-500/10 gap-3 px-3">
             <LogOut className="w-4 h-4" />
             <span className="text-sm">Logout</span>
           </Button>
@@ -503,31 +533,31 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       {/* Main Content */}
       < div className="flex-1 flex flex-col overflow-hidden" >
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shadow-sm shrink-0">
+        <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 lg:px-8 shadow-sm shrink-0">
           <div className="flex items-center gap-2 lg:gap-4">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMobileMenuOpen(true)}>
+            <Button variant="ghost" size="icon" className="lg:hidden text-white" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-6 h-6" />
             </Button>
             {selectedContestId ? (
               <div className="flex items-center gap-2 overflow-hidden">
-                <Button variant="ghost" size="sm" onClick={() => setSelectedContestId(null)} className="text-slate-500 hover:text-primary shrink-0 px-2 lg:px-4">
+                <Button variant="ghost" size="sm" onClick={() => setSelectedContestId(null)} className="text-slate-300 hover:text-primary shrink-0 px-2 lg:px-4">
                   <span className="hidden sm:inline">&larr; Back</span>
                   <span className="sm:hidden">&larr;</span>
                 </Button>
-                <span className="text-slate-300">/</span>
-                <h2 className="text-sm lg:text-lg font-semibold text-slate-800 truncate">Contestants</h2>
+                <span className="text-slate-400">/</span>
+                <h2 className="text-sm lg:text-lg font-semibold text-white truncate">Contestants</h2>
               </div>
             ) : (
-              <h2 className="text-sm lg:text-lg font-semibold text-slate-800 capitalize truncate">{activeTab}</h2>
+              <h2 className="text-sm lg:text-lg font-semibold text-white capitalize truncate">{activeTab}</h2>
             )}
           </div>
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
                 <ShieldCheck className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
               </div>
-              <span className="hidden sm:inline text-xs font-medium text-slate-600">Administrator</span>
+              <span className="hidden sm:inline text-xs font-medium text-slate-300">Administrator</span>
             </div>
           </div>
         </header>
@@ -542,11 +572,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               onBulkPromote={handleBulkPromote}
             />
           ) : activeTab === "submissions" ? (
-            <Card className="border-none shadow-sm">
+            <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
                 <div>
-                  <CardTitle>All Submissions</CardTitle>
-                  <CardDescription>View and manage all video uploads across all contests</CardDescription>
+                  <CardTitle className="text-white">All Submissions</CardTitle>
+                  <CardDescription className="text-slate-400">View and manage all video uploads across all contests</CardDescription>
                 </div>
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -563,10 +593,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </CardContent>
             </Card>
           ) : activeTab === "users" ? (
-            <Card className="border-none shadow-sm">
+            <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
               <CardHeader>
-                <CardTitle>Registered Users</CardTitle>
-                <CardDescription>Manage your participant database</CardDescription>
+                <CardTitle className="text-white">Registered Users</CardTitle>
+                <CardDescription className="text-slate-400">Manage your participant database</CardDescription>
               </CardHeader>
               <CardContent>
                 <UsersTable
@@ -580,26 +610,26 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           ) : activeTab === "contests" ? (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-800">Managed Contests</h3>
+                <h3 className="text-lg font-bold text-white">Managed Contests</h3>
                 <Button onClick={() => setShowContestForm(true)} className="gap-2">
                   <Plus className="w-4 h-4" /> Create Contest
                 </Button>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {contests.map(contest => (
-                  <Card key={contest.id} className="relative overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleFetchContestants(contest.id)}>
+                  <Card key={contest.id} className="relative overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-slate-900/80 backdrop-blur-sm" onClick={() => handleFetchContestants(contest.id)}>
                     <div className="absolute top-0 right-0 p-4">
-                      <Badge className={`border-none px-2 py-0 ${contest.is_active ? "bg-green-500" : "bg-slate-400"}`}>
+                      <Badge className={`border-none px-2 py-0 ${contest.is_active ? "bg-green-500" : "bg-slate-600"}`}>
                         {contest.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </div>
                     <CardHeader className="pb-2">
-                      <CardTitle className="pr-12 text-base">{contest.name}</CardTitle>
+                      <CardTitle className="pr-12 text-base text-white">{contest.name}</CardTitle>
                       <CardDescription className="text-primary font-medium">Fee: ₦{contest.entry_fee?.toLocaleString() || "0"}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 gap-2 text-[10px] uppercase font-bold text-slate-400 text-center">
-                        <div className="p-2 bg-slate-50 rounded">Prize: ₦{contest.prize1?.toLocaleString() || "0"}</div>
+                        <div className="p-2 bg-white/5 rounded">Prize: ₦{contest.prize1?.toLocaleString() || "0"}</div>
                       </div>
                       <Button
                         variant="ghost"
@@ -628,7 +658,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           handleDeleteContest(contest.id);
                         }}
                         disabled={processingId === contest.id}
-                        className="absolute bottom-2 right-2 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
+                        className="absolute bottom-2 right-2 p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors disabled:opacity-50"
                         title="Delete contest"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -641,20 +671,20 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           ) : activeTab === "categories" ? (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-800">Manage Categories</h3>
+                <h3 className="text-lg font-bold text-white">Manage Categories</h3>
                 <Button onClick={() => setShowCategoryForm(true)} className="gap-2">
                   <Plus className="w-4 h-4" /> Add Category
                 </Button>
               </div>
-              <Card className="border-none shadow-sm">
+              <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader className="bg-slate-50">
+                    <TableHeader className="bg-white/5">
                       <TableRow>
-                        <TableHead>Category Name</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-slate-300">Category Name</TableHead>
+                        <TableHead className="text-slate-300">Description</TableHead>
+                        <TableHead className="text-slate-300">Created</TableHead>
+                        <TableHead className="text-right text-slate-300">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -666,9 +696,9 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </TableRow>
                       ) : (
                         categories.map(category => (
-                          <TableRow key={category.id}>
-                            <TableCell className="font-semibold text-slate-900">{category.name}</TableCell>
-                            <TableCell className="text-slate-500 text-sm">{category.description || "—"}</TableCell>
+                          <TableRow key={category.id} className="border-white/10">
+                            <TableCell className="font-semibold text-white">{category.name}</TableCell>
+                            <TableCell className="text-slate-400 text-sm">{category.description || "—"}</TableCell>
                             <TableCell className="text-slate-400 text-sm">{new Date(category.created_at).toLocaleDateString()}</TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
@@ -723,37 +753,39 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       {/* Contest Form Modal */}
       {
         showContestForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-lg">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-lg bg-slate-900/95 backdrop-blur-md border-white/10">
               <CardHeader>
-                <CardTitle>{editingContest ? 'Edit Contest' : 'Create Contest'}</CardTitle>
+                <CardTitle className="text-white">{editingContest ? 'Edit Contest' : 'Create Contest'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateOrUpdateContest} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Contest Name</Label>
+                    <Label className="text-white">Contest Name</Label>
                     <Input
                       value={contestFormData.name}
                       onChange={e => setContestFormData({ ...contestFormData, name: e.target.value })}
                       required
+                      className="bg-slate-800/50 border-white/10 text-white"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Entry Fee (₦)</Label>
+                      <Label className="text-white">Entry Fee (₦)</Label>
                       <Input
                         type="number"
                         value={contestFormData.entry_fee}
                         onChange={e => setContestFormData({ ...contestFormData, entry_fee: parseFloat(e.target.value) })}
+                        className="bg-slate-800/50 border-white/10 text-white"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Status</Label>
+                      <Label className="text-white">Status</Label>
                       <Select
                         value={contestFormData.is_active ? "active" : "inactive"}
                         onValueChange={(val) => setContestFormData({ ...contestFormData, is_active: val === 'active' })}
                       >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="bg-slate-800/50 border-white/10 text-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="inactive">Inactive</SelectItem>
@@ -763,28 +795,30 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </div>
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-xs">Winner Prize (1st Place)</Label>
+                      <Label className="text-xs text-white">Winner Prize (1st Place)</Label>
                       <Input
                         type="number" value={contestFormData.prize1}
                         onChange={e => setContestFormData({ ...contestFormData, prize1: parseFloat(e.target.value) })}
+                        className="bg-slate-800/50 border-white/10 text-white"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Max Number of Contestants (0 for unlimited)</Label>
+                    <Label className="text-white">Max Number of Contestants (0 for unlimited)</Label>
                     <Input
                       type="number"
                       value={contestFormData.max_contestants}
                       onChange={e => setContestFormData({ ...contestFormData, max_contestants: parseInt(e.target.value) })}
+                      className="bg-slate-800/50 border-white/10 text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Category</Label>
+                    <Label className="text-white">Category</Label>
                     <Select
                       value={contestFormData.category_id}
                       onValueChange={(val) => setContestFormData({ ...contestFormData, category_id: val })}
                     >
-                      <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                      <SelectTrigger className="bg-slate-800/50 border-white/10 text-white"><SelectValue placeholder="Select a category" /></SelectTrigger>
                       <SelectContent>
                         {categories.map(cat => (
                           <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
@@ -807,28 +841,30 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       {/* Category Form Modal */}
       {showCategoryForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-lg bg-slate-900/95 backdrop-blur-md border-white/10">
             <CardHeader>
-              <CardTitle>{editingCategory ? 'Edit Category' : 'Create Category'}</CardTitle>
+              <CardTitle className="text-white">{editingCategory ? 'Edit Category' : 'Create Category'}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateOrUpdateCategory} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Category Name</Label>
+                  <Label className="text-white">Category Name</Label>
                   <Input
                     value={categoryFormData.name}
                     onChange={e => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
                     required
                     placeholder="e.g., Music, Dance, Comedy"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Description (Optional)</Label>
+                  <Label className="text-white">Description (Optional)</Label>
                   <Input
                     value={categoryFormData.description}
                     onChange={e => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
                     placeholder="Brief description of this category"
+                    className="bg-slate-800/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
@@ -855,30 +891,30 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
 function SubmissionsTable({ submissions, loading, onDelete }: { submissions: Submission[], loading: boolean, onDelete: (id: string) => void }) {
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden">
+    <div className="rounded-lg border border-white/10 overflow-hidden">
       <div className="overflow-x-auto">
         <Table className="min-w-[800px] lg:min-w-full">
-          <TableHeader className="bg-slate-50/50">
-            <TableRow>
-              <TableHead>Contestant</TableHead>
-              <TableHead>Video Info</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+          <TableHeader className="bg-white/5">
+            <TableRow className="border-white/10">
+              <TableHead className="text-slate-300">Contestant</TableHead>
+              <TableHead className="text-slate-300">Video Info</TableHead>
+              <TableHead className="text-slate-300">Payment</TableHead>
+              <TableHead className="text-slate-300">Status</TableHead>
+              <TableHead className="text-right text-slate-300">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-20">Loading...</TableCell></TableRow>
+              <TableRow className="border-white/10"><TableCell colSpan={4} className="text-center py-20 text-slate-400">Loading...</TableCell></TableRow>
             ) : submissions.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-20">No data found</TableCell></TableRow>
+              <TableRow className="border-white/10"><TableCell colSpan={4} className="text-center py-20 text-slate-400">No data found</TableCell></TableRow>
             ) : (
               submissions.map((sub) => (
-                <TableRow key={sub.video_id}>
+                <TableRow key={sub.video_id} className="border-white/10">
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-slate-900">{sub.full_name}</span>
-                      <span className="text-xs text-slate-500">{sub.email}</span>
+                      <span className="font-semibold text-white">{sub.full_name}</span>
+                      <span className="text-xs text-slate-400">{sub.email}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -912,38 +948,38 @@ function SubmissionsTable({ submissions, loading, onDelete }: { submissions: Sub
 
 function UsersTable({ users, loading, onDelete, onView }: { users: User[], loading: boolean, onDelete: (id: string) => void, onView: (id: string) => void }) {
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden">
+    <div className="rounded-lg border border-white/10 overflow-hidden">
       <div className="overflow-x-auto">
         <Table className="min-w-[600px] lg:min-w-full">
-          <TableHeader className="bg-slate-50/50">
-            <TableRow>
-              <TableHead>User Details</TableHead>
-              <TableHead>Total Uploads</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+          <TableHeader className="bg-white/5">
+            <TableRow className="border-white/10">
+              <TableHead className="text-slate-300">User Details</TableHead>
+              <TableHead className="text-slate-300">Total Uploads</TableHead>
+              <TableHead className="text-slate-300">Joined</TableHead>
+              <TableHead className="text-right text-slate-300">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-20">Loading...</TableCell></TableRow>
+              <TableRow className="border-white/10"><TableCell colSpan={4} className="text-center py-20 text-slate-400">Loading...</TableCell></TableRow>
             ) : users.map(user => (
-              <TableRow key={user.id}>
+              <TableRow key={user.id} className="border-white/10">
                 <TableCell>
-                  <div className="font-medium text-slate-900">{user.full_name}</div>
-                  <div className="text-xs text-slate-500">{user.email}</div>
+                  <div className="font-medium text-white">{user.full_name}</div>
+                  <div className="text-xs text-slate-400">{user.email}</div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                  <Badge variant="secondary" className="bg-primary/20 text-primary">
                     {user.total_uploads} Videos
                   </Badge>
                 </TableCell>
                 <TableCell className="text-slate-400 text-sm">{new Date(user.created_at).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onView(user.id)} className="text-primary hover:text-primary/80 hover:bg-primary/5">
+                    <Button variant="ghost" size="sm" onClick={() => onView(user.id)} className="text-primary hover:text-primary/80 hover:bg-primary/10">
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onDelete(user.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50">
+                    <Button variant="ghost" size="sm" onClick={() => onDelete(user.id)} className="text-red-400 hover:text-red-300 hover:bg-red-500/10">
                       <XCircle className="w-4 h-4" />
                     </Button>
                   </div>
@@ -981,7 +1017,7 @@ function ContestantsListView({ contestants, loading, contestName, onUpdateStatus
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-slate-800">{contestName} - Contestants</h3>
+        <h3 className="text-xl font-bold text-white">{contestName} - Contestants</h3>
         <div className="flex items-center gap-3">
           {selectedIds.length > 0 && (
             <Button size="sm" onClick={handleBulkPromoteClick} className="gap-2 bg-amber-500 hover:bg-amber-600">
@@ -991,45 +1027,45 @@ function ContestantsListView({ contestants, loading, contestName, onUpdateStatus
           <Badge variant="outline">{contestants.length} Participants</Badge>
         </div>
       </div>
-      <Card className="border-none shadow-sm overflow-hidden">
+      <Card className="border-none shadow-sm overflow-hidden bg-slate-900/80 backdrop-blur-sm">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="min-w-[900px] lg:min-w-full">
-              <TableHeader className="bg-slate-50">
-                <TableRow>
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10">
                   <TableHead className="w-10">
                     <input
                       type="checkbox"
                       checked={selectedIds.length === contestants.length && contestants.length > 0}
                       onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-slate-300"
+                      className="h-4 w-4 rounded border-white/30"
                     />
                   </TableHead>
-                  <TableHead>Contestant</TableHead>
-                  <TableHead>Video</TableHead>
-                  <TableHead>Winner Status</TableHead>
-                  <TableHead>Promotion</TableHead>
-                  <TableHead>Payment</TableHead>
+                  <TableHead className="text-slate-300">Contestant</TableHead>
+                  <TableHead className="text-slate-300">Video</TableHead>
+                  <TableHead className="text-slate-300">Winner Status</TableHead>
+                  <TableHead className="text-slate-300">Promotion</TableHead>
+                  <TableHead className="text-slate-300">Payment</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20">Loading contestants...</TableCell></TableRow>
+                  <TableRow className="border-white/10"><TableCell colSpan={6} className="text-center py-20 text-slate-400">Loading contestants...</TableCell></TableRow>
                 ) : Array.isArray(contestants) && contestants.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20 text-slate-400">No contestants found for this contest</TableCell></TableRow>
+                  <TableRow className="border-white/10"><TableCell colSpan={6} className="text-center py-20 text-slate-400">No contestants found for this contest</TableCell></TableRow>
                 ) : contestants.map(c => (
-                  <TableRow key={c.user_id} className={selectedIds.includes(c.video_id) ? "bg-primary/5" : ""}>
+                  <TableRow key={c.user_id} className={`border-white/10 ${selectedIds.includes(c.video_id) ? "bg-primary/5" : ""}`}>
                     <TableCell>
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(c.video_id)}
                         onChange={() => toggleSelect(c.video_id)}
-                        className="h-4 w-4 rounded border-slate-300"
+                        className="h-4 w-4 rounded border-white/30"
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="font-bold text-slate-900">{c.full_name}</div>
-                      <div className="text-[10px] text-slate-500">{c.email}</div>
+                      <div className="font-bold text-white">{c.full_name}</div>
+                      <div className="text-[10px] text-slate-400">{c.email}</div>
                     </TableCell>
                     <TableCell>
                       <a href={`${API_BASE_URL}${c.file_path}`} target="_blank" className="flex items-center gap-1.5 text-xs text-primary font-medium hover:underline">
@@ -1060,7 +1096,7 @@ function ContestantsListView({ contestants, loading, contestName, onUpdateStatus
                           onChange={(e) => onUpdateStatus(c.video_id, c.winner_position, e.target.checked)}
                           className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
                         />
-                        <span className="text-[10px] text-slate-600">Promote</span>
+                        <span className="text-[10px] text-slate-300">Promote</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -1086,27 +1122,27 @@ function SettingsView({ siteInfo, setSiteInfo, handleUpdateSiteInfo, handleLogoU
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 text-base text-white">
             <Globe className="w-5 h-5 text-primary" /> Site Information
           </CardTitle>
-          <CardDescription>Visual identity and contact branding</CardDescription>
+          <CardDescription className="text-slate-400">Visual identity and contact branding</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
             <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Site Logo</Label>
-            <div className="flex items-center gap-4 p-4 border rounded-lg bg-slate-50/50">
-              <div className="w-16 h-16 rounded border bg-white flex items-center justify-center overflow-hidden">
+            <div className="flex items-center gap-4 p-4 border border-white/10 rounded-lg bg-white/5">
+              <div className="w-16 h-16 rounded border border-white/10 bg-slate-800 flex items-center justify-center overflow-hidden">
                 {siteInfo.logo_url ? (
                   <img src={getLogoSrc(siteInfo.logo_url)} alt="Current Logo" className="w-full h-full object-contain" />
                 ) : (
-                  <ImageIcon className="w-6 h-6 text-slate-200" />
+                  <ImageIcon className="w-6 h-6 text-slate-400" />
                 )}
               </div>
               <div className="flex-1 space-y-2">
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="h-8 gap-2 text-xs" disabled={isUploadingLogo}>
+                <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="h-8 gap-2 text-xs border-white/20 text-slate-300 hover:bg-white/10" disabled={isUploadingLogo}>
                   <Upload className="w-3 h-3" /> {isUploadingLogo ? "Uploading..." : "Upload New Logo"}
                 </Button>
                 <p className="text-[10px] text-slate-400">PNG, JPG recommended. Max 2MB.</p>
@@ -1115,8 +1151,8 @@ function SettingsView({ siteInfo, setSiteInfo, handleUpdateSiteInfo, handleLogoU
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm">Portal Name</Label>
-              <Input value={siteInfo.site_name} onChange={e => setSiteInfo({ ...siteInfo, site_name: e.target.value })} />
+              <Label className="text-sm text-slate-300">Portal Name</Label>
+              <Input value={siteInfo.site_name} onChange={e => setSiteInfo({ ...siteInfo, site_name: e.target.value })} className="bg-slate-800/50 border-white/10 text-white" />
             </div>
           </div>
           <Button className="w-full gap-2 h-10" onClick={handleUpdateSiteInfo}>
@@ -1125,29 +1161,29 @@ function SettingsView({ siteInfo, setSiteInfo, handleUpdateSiteInfo, handleLogoU
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm bg-slate-900/80 backdrop-blur-sm border-white/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 text-base text-white">
             <Key className="w-5 h-5 text-primary" /> Security
           </CardTitle>
-          <CardDescription>Manage administrative access</CardDescription>
+          <CardDescription className="text-slate-400">Manage administrative access</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm">Current Password</Label>
+              <Label className="text-sm text-slate-300">Current Password</Label>
               <div className="relative">
                 <Input 
                   type={showCurrentPassword ? "text" : "password"} 
                   value={passwords.current} 
                   onChange={e => setPasswords({ ...passwords, current: e.target.value })} 
-                  className="pr-10"
+                  className="pr-10 bg-slate-800/50 border-white/10 text-white"
                   required 
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors focus:outline-none"
                   tabIndex={-1}
                 >
                   {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -1155,19 +1191,19 @@ function SettingsView({ siteInfo, setSiteInfo, handleUpdateSiteInfo, handleLogoU
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-sm text-red-500">New Password</Label>
+              <Label className="text-sm text-red-400">New Password</Label>
               <div className="relative">
                 <Input 
                   type={showNewPassword ? "text" : "password"} 
                   value={passwords.new} 
                   onChange={e => setPasswords({ ...passwords, new: e.target.value })} 
-                  className="pr-10"
+                  className="pr-10 bg-slate-800/50 border-white/10 text-white"
                   required 
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors focus:outline-none"
                   tabIndex={-1}
                 >
                   {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -1175,19 +1211,19 @@ function SettingsView({ siteInfo, setSiteInfo, handleUpdateSiteInfo, handleLogoU
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-sm">Confirm Password</Label>
+              <Label className="text-sm text-slate-300">Confirm Password</Label>
               <div className="relative">
                 <Input 
                   type={showConfirmPassword ? "text" : "password"} 
                   value={passwords.confirm} 
                   onChange={e => setPasswords({ ...passwords, confirm: e.target.value })} 
-                  className="pr-10"
+                  className="pr-10 bg-slate-800/50 border-white/10 text-white"
                   required 
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors focus:outline-none"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
